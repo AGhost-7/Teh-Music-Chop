@@ -167,23 +167,24 @@ function products_from_request($page, $page_count){
 }
 
 function order_using() {
-	$result = 'product_name';
 	
-	switch($_GET['o-n']){
-		case 'category':
-			$result = 'category_name';
-			break;
-			
-		case 'name':
-			$result = 'product_name';
-			break;
-		case 'price':
-			$result = 'product_price';
-			break;
-		case 'manufacturer':
-			$result = 'manufacturer_name';
-			break;
-	}
+	$result = 'product_name';
+	if(isset($_GET['o-n']))
+		switch($_GET['o-n']){
+			case 'category':
+				$result = 'category_name';
+				break;
+				
+			case 'name':
+				$result = 'product_name';
+				break;
+			case 'price':
+				$result = 'product_price';
+				break;
+			case 'manufacturer':
+				$result = 'manufacturer_name';
+				break;
+		}
 	
 	return $result;
 }

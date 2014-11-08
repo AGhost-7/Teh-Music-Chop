@@ -52,7 +52,7 @@
 				<p>
 					<small>Minimum length of 6 characters. Legal characters are alphanumeric, and the following symbols: _#%&*!@$-</small>
 				</p>
-				<input type="text" class="form-control" name="user-name" value="<?php if($error) echo $user_name; ?>"/>
+				<input type="text" class="form-control" name="user-name" value="<?php if(isset($error)) echo $user_name; ?>"/>
 			</div>
 			<div class="form-group col-xs-7">
 				<label>Password</label>

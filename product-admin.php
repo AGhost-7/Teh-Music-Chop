@@ -28,6 +28,16 @@
 	<head>
 		<title>Product Administration</title>
 		<?php include 'templates/head.php'; ?>
+		<style>
+		/* For w/e reason bs isn't working the way 
+		 * I think it should be. You're supposed to
+		 * be able to use 'a' blocks without issue as
+		 * buttons...
+		 */
+		a.btn-warning, a.btn-danger, a.btn-success {
+			color: white;
+		}
+		</style>
 	</head>
 	<body>
 		<div class="container">
@@ -84,13 +94,16 @@
 			<div class="modal fade" id="product-editor">
 				<div class="modal-dialog">
 					<div class="modal-content">
+						
 						<div class="modal-header">
 							<button type="button" class="close" data-dismiss="modal">
 								<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
 							</button>
 							<h4 class="modal-title">Edit -</h4>
 						</div>
+						
 						<div class="modal-body">
+						
 							<div class="form-group">
 								<label>Product Id: </label> <span class="form-control-static" id="product-id">1</span>
 							</div>
@@ -106,28 +119,46 @@
 								<input type="text" name="product-name" class="form-control" id="name-editor"/>
 							</div>
 							
-							<div class="form-group">
+							<div class="form-group" id="manufacturer-root">
 								<label>Manufacturer</label>
-								<select class="form-control" name="product-manufacturer" id="manufacturer-editor">
-								<?php
-									while($man = $manufacturers->fetch_assoc()){
-										echo '<option value="' . $man['manufacturer_id'] . '">'
-											. $man['manufacturer_name'] . '</option>';
-									}
-								?>
-								</select>
+								
+								<div class="input-group">
+									<select class="form-control" name="product-manufacturer" id="manufacturer-editor">
+									<?php
+										while($man = $manufacturers->fetch_assoc()){
+											echo '<option value="' . $man['manufacturer_id'] . '">'
+												. $man['manufacturer_name'] . '</option>';
+										}
+									?>
+									</select>
+									
+									<a class="btn btn-success input-group-addon">Add</a>
+									<a class="btn btn-warning input-group-addon">Modify</a>
+									<a class="btn btn-danger input-group-addon">Remove</a>
+									
+								</div>
+								
 							</div>
 							
-							<div class="form-group">
+							<div class="form-group" id="category-root">
 								<label>Category</label>
-								<select class="form-control" name="product-category" id="category-editor">
-								<?php
-									while($cat = $categories->fetch_assoc()){
-										echo '<option value="' . $cat['category_id'] . '">' 
-											. $cat['category_name'] .'</option>';
-									}
-								?>
-								</select>
+								
+								<div class="input-group">
+									<select class="form-control" name="product-category" id="category-editor">
+									<?php
+										while($cat = $categories->fetch_assoc()){
+											echo '<option value="' . $cat['category_id'] . '">' 
+												. $cat['category_name'] .'</option>';
+										}
+									?>
+									</select>
+									
+									<a class="btn btn-success input-group-addon">Add</a>
+									<a class="btn btn-warning input-group-addon">Modify</a>
+									<a class="btn btn-danger input-group-addon">Remove</a>
+									
+								</div>
+								
 							</div>
 							
 							<div class="form-group">
@@ -142,11 +173,13 @@
 							
 							
 							
-						</div>
+						</div><!-- END MODAL BODY -->
+						
 						<div class="modal-footer">
 							<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 							<button type="button" id="save-btn" class="btn btn-primary">Save changes</button>
 						</div>
+						
 					</div>
 				</div>
 			</div>

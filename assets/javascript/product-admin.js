@@ -220,9 +220,188 @@ $imageButton.click(function(){
 $imageEditor.change(function(ev){
 	
 	console.log('changed:', ev);
-	
-	
-	
+
 });
 
+simpleEditor('manufacturer');
+simpleEditor('category');
+
+// wOOoOo scary... ~(^0^)~
+function simpleEditor(name) {
+	var 
+		$root = $('#' + name + '-root'),
+		$sel = $root.find('select');
+
+	
+	// Add
+	$root.find('.btn-success').popover({
+		html: true,
+		content: popoverHtml('Add'),
+		container:'.modal-body',
+		placement: 'top'
+	}).on('shown.bs.popover', function(){
+		var 
+			$t = $(this),
+			$pop = $('#popover-add'),
+			$btn = $pop.find('button');
+		
+		$btn.click(function(){
+			var inName = $pop.find('input').val();
+			if(inName === '') {
+				alert('You should give some info...');
+			} else {
+				var args = {};
+				args[name + '-name'] = inName;
+				$.ajax({
+					url: "ajax/add-" + name + ".php",
+					data: args,
+					type: "POST",
+					success: function(data){
+						if(data.error) {
+							alert(data.error)
+						} else {
+							var $opt = $('<option value="' + data.id + '">' + 
+								data.vars[name + '-name'] + '</option>');
+							
+							$sel.prepend($opt);
+							$t.popover('hide');
+						}
+					},
+					error: function(){
+						alert("Error connecting to server.")
+					}
+				});
+			}
+		});
+	
+	});
+	
+	// Modify: this is the hard one...
+	$root.find('.btn-warning').popover({
+		html: true,
+		content: withState(function($selected, id, inName){
+			return popoverHtml('Modify', inName)
+		}),
+		container: '.modal-body',
+		placement: 'top'
+	}).on('shown.bs.popover', function(){
+		var 
+			$t = $(this),
+			$pop = $('#popover-modify'),
+			$btn = $pop.find('button');
+		
+		$btn.click(withState(function($selected,id,inName){
+			//alert('modify: '+name)
+			var inName = $pop.find('input').val();
+			
+			if(inName === ""){
+				alert("Name cannot be empty.")
+			} else {
+				var 
+					id = $sel.val(),
+					args = {};
+					
+				// Generate the arguments object
+				args[name + "-id"] = id;
+				args[name + "-name"] = inName;
+				
+				$.ajax({
+					url: "ajax/mod-" + name + ".php",
+					type: "POST",
+					data: args,
+					success: function(data){
+						
+						// The server will escape the html characters
+						// and so on, so to have something accurate...
+						inName = data.vars[name + "-name"];
+						id = data.vars[name + "-id"];
+						
+						// set the option to the user's value
+						$sel
+							.find('[value="' + id + '"]')
+							.text(inName);
+							
+						// change all fields that we've got outside of the modal
+						// to what was modfied.
+						$('tbody')
+							.find('td[data-' + name + '-id="' + id + '"]')
+							.text(inName);
+						
+						// since it won't hide on its own...
+						$t.popover('hide');
+					},
+					error: function(){
+						alert("Error connecting to server")
+					}
+				})
+			}
+		}));
+	});
+	
+	
+	// Remove
+	$root.find('.btn-danger').click(withState(function($selected, id){
+		args = {};
+		args[name + '-id'] = id;
+		
+		$.ajax({
+			url: "ajax/del-" + name + '.php',
+			data: args,
+			type: "POST",
+		//	dataType: 'text',
+			success: function(data){
+				console.log(data)
+			
+				if(data.error){
+					alert(data.error);
+				} else {
+					$selected.remove();
+					// and reset select input to first element after removing
+					$sel[0].selectedIndex = 0;
+				}
+			},
+			error: function(xhr, status, err){
+				alert(err)
+			}
+		})
+	}));
+	
+	// Functional inheritance :D... Used for functions
+	// that need info on the state of the select block.
+	function withState(handler){
+		return function(){
+			var $selected = $sel.find('option:selected'),
+				id = $selected.val(),
+				name = $selected.text();
+				
+		//	console.log('name',name,'id',id);
+			
+			return handler($selected,id,name);
+		};
+	}
+	
+	function popoverHtml(title, data){
+		data = data || "";
+		var id = 'popover-' + title.toLowerCase();
+		var html = 
+			'<div class="input-group" id="' + id + '">' +
+				'<input type="text" class="form-control" value="' + data + '"width=1>' +
+				'<span class="input-group-btn">' +
+					'<button class="btn btn-default" type="button">' + title + '</button>' +
+				'</span>' +
+			'</div>';
+		return html;
+	}
+}
+
+
+
+
 })();
+
+
+
+
+
+
+

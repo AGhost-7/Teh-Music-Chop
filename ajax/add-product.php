@@ -13,9 +13,9 @@
 		
 		$price = floatval($_POST['product-price']);
 		$name = htmlspecialchars($_POST['product-name']);
-		$quantity = $_POST['product-quantity'];
-		$manufacturer = $_POST['product-manufacturer'];
-		$category = $_POST['product-category'];
+		$quantity = intval($_POST['product-quantity']);
+		$manufacturer = intval($_POST['product-manufacturer']);
+		$category = intval($_POST['product-category']);
 		
 		$prep = $con->prepare("
 			INSERT INTO `products`(
@@ -32,10 +32,18 @@
 		$prep->bind_param('sidii', $name, $quantity, $price, $manufacturer, $category);
 		
 		if($prep->execute()) {
-			echo json_encode(array(
-				'vars' => $_POST, 
-				'id' => $prep->insert_id
-			));
+			echo json_encode(
+				array(
+					'vars' => array(
+						'product-price' => $price,
+						'product-name' => $name,
+						'product-quantity' => $quantity,
+						'product-manufacturer' => $manufacturer,
+						'product-category' => $category
+					), 
+					'id' => $prep->insert_id
+				)
+			);
 		} else {
 			echo '{"error":"' . $prep->error . '"}';
 		}

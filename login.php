@@ -8,7 +8,7 @@
 		include 'templates/msg-with-redirect.php';
 		exit;
 		
-	} else if(isset($_POST['user-name']) || $_POST['password']) {
+	} else if(isset($_POST['user-name']) && isset($_POST['password'])) {
 	
 		if($user = User::login($_POST['user-name'], $_POST['password'], isset($_POST['cookie']))) {
 			$msg_title = "Login Success";
