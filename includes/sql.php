@@ -116,97 +116,99 @@ class user {
 /**
  * Returns the result set based on function and HTTP GET arguments
  */
-
 function products_from_request($page, $page_count){
 	global $con;
 	
-	$from = ($page - 1) * 20;
+	$args = [];
+	$arg_types = "";
+	$query = "
+		SELECT *
+		FROM `products`
+		INNER JOIN `categories`
+			ON `categories`.category_id = `products`.product_category
+		INNER JOIN manufacturers
+			ON `manufacturers`.manufacturer_id = `products`.product_manufacturer";
 	
-	$ord_using = order_using();
+	// Now the dynamic part of our query, filtering logic
 	
-	if(isset($_GET['o-o']) && $_GET['o-o'] == 'DESC'){
-		$ord_in = 'DESC';
-	} else {
-		$ord_in = 'ASC';
+	$has_w = false;
+	
+	// view only products of a certain category.
+	if(!empty($_GET['c'])){
+		$args [] = &$_GET['c'];
+		$query .= " WHERE category_id = ? ";
+		$arg_types .= "i";
+		$has_w = true;
 	}
 	
-	// If this is a page search, we need to
-	// use a prepared statement.
-	$field = page_query();
-	if($field) {
-		$query = "
-			SELECT *
-			FROM `products`
-			INNER JOIN `categories`
-				ON `categories`.category_id = `products`.product_category
-			INNER JOIN manufacturers
-				ON `manufacturers`.manufacturer_id = `products`.product_manufacturer
-			WHERE `$field` LIKE ?
-			ORDER BY $ord_with $ord_in
-			LIMIT $from, 20
-		";
+	// view only products of a certain manufacturer
+	if(!empty($_GET['m'])) {
+		$args [] = &$_GET['m'];
+		$query .= $has_w ? " AND " : " WHERE ";
+		$query .= " manufacturer_id = ? ";
+		$arg_types .= "i";
+		$has_w = true;
+	}
+	
+	// where the name of the product is...
+	if(!empty($_GET['n'])) {
+		$query_name = "%" . $_GET['n'] . "%";
+		$args [] = &$query_name;
+		$query .= $has_w ? " AND " : " WHERE ";
+		$query .= " product_name LIKE ? ";
+		$arg_types .= "s";
+		$has_w = true;
+	}
+	
+	// price range...
+	if(!empty($_GET['p-min'])) {
+		$args [] = &$_GET['p-min'];
+		$query .= $has_w ? " AND " : " WHERE ";
+		$query .= " product_price >= ? ";
+		$arg_types .= "d";
+		$has_w = true;
+	}
+	
+	if(!empty($_GET['p-max']) ) {
+		$args [] = &$_GET['p-max'];
+		$query .= $has_w ? " AND " : " WHERE ";
+		$query .= " product_price <= ? ";
+		$arg_types .= "d";
+		$has_w = true;
+	}
+	
+	// dynamic component, ordering shit
+	
+	//TODO...
+	
+	// now we want to limit number of rows we're getting.
+	$from = ($page - 1) * 20;
+	$query .= " LIMIT $from, 20 ";
+	
+	
+	// Now put the query together...
+	if(count($args) > 0){
+		// the input data types string is the first argument to the bind_param 
+		// method, so we have to prepend it at the start of the args array
+		array_unshift($args, $arg_types);
 		
-		$prep = $con->prepare(query);
-		$prep->bind_param("s", "%" . $_GET['s'] . "%");
+		$prep = $con->prepare($query);
+		
+		// since the bind_param is a vararg function, we need to use some
+		// funky shit since our query has a varied number of arguments.
+		// i.e., we need to be able to call the function by passing an
+		// array or arguments.
+		call_user_func_array(array($prep,'bind_param'), $args);
+		
+		$prep->execute();
 		$result = $prep->get_result();
 		$prep->close();
 		
-		return $result;
 	} else {
-		return $con->query("
-				SELECT *
-				FROM `products`
-				INNER JOIN `categories`
-					ON `categories`.category_id = `products`.product_category
-				INNER JOIN manufacturers
-					ON `manufacturers`.manufacturer_id = `products`.product_manufacturer
-				ORDER BY $ord_using $ord_in
-				LIMIT $from, 20
-			");
+		$result = $con->query($query);
 	}
-}
-
-function order_using() {
-	
-	$result = 'product_name';
-	if(isset($_GET['o-n']))
-		switch($_GET['o-n']){
-			case 'category':
-				$result = 'category_name';
-				break;
-				
-			case 'name':
-				$result = 'product_name';
-				break;
-			case 'price':
-				$result = 'product_price';
-				break;
-			case 'manufacturer':
-				$result = 'manufacturer_name';
-				break;
-		}
-	
 	return $result;
-}
-
-function page_query() {
-	if(isset($_GET['s'])) {
-		$field;
-		switch($_GET['s-f']){
-			case 'name':
-				$field = 'product_name';
-				break;
-			case 'manufacturer':
-				$field = 'manufacturer_name';
-				break;
-			case 'category';
-				$field = 'category_name';
-			default:
-				$field = 'product_name'; 
-		}
-		return $field;
-	}
-	return false;
+	
 }
 
 session_start();

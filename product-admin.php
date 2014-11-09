@@ -4,10 +4,14 @@
 	if(!$user || !$user->get_is_admin()){
 		$msg_title = 'Illegal access';
 		$msg_body = 'You must have administrative rights to access this page.';
+		$msg_type = 'danger';
 		include 'templates/msg-with-redirect.php';
 		$con->close();
 		exit;
 	}
+	
+	// manually declare to prevent any hackery.
+	$self_url = "product-admin.php";
 	
 	$page = isset($_GET['p']) ? intval($_GET['p']) : 1;
 
@@ -41,7 +45,10 @@
 	</head>
 	<body>
 		<div class="container">
-			<?php include 'templates/navbar.php'; ?>
+			<?php 
+				include 'templates/navbar.php'; 
+				include 'templates/search-util.php';
+			?>
 			<div>
 				<button class="btn btn-success btn-sm" id="add-btn">Add Product</button>
 			</div>
@@ -79,17 +86,7 @@
 				</tbody>
 			</table>
 		
-			<nav>
-				<ul class="pager">
-				<?php 
-				if($page > 1) 
-					echo '<li><a href="product-admin.php?p=' . ($page - 1). '">&laquo; Previous</a></li>';
-				
-				if($page < $page_count) 
-					echo '<li><a href="product-admin.php?p=' . ($page + 1). '">Next &raquo;</a></li>';
-				?>
-				</ul>
-			</nav>
+			<?php include 'templates/pager.php'; ?>
 			
 			<div class="modal fade" id="product-editor">
 				<div class="modal-dialog">
@@ -125,6 +122,10 @@
 								<div class="input-group">
 									<select class="form-control" name="product-manufacturer" id="manufacturer-editor">
 									<?php
+										// rewind to index 0 since the search util already went
+										// through it.
+										$manufacturers->data_seek(0);
+										
 										while($man = $manufacturers->fetch_assoc()){
 											echo '<option value="' . $man['manufacturer_id'] . '">'
 												. $man['manufacturer_name'] . '</option>';
@@ -146,6 +147,9 @@
 								<div class="input-group">
 									<select class="form-control" name="product-category" id="category-editor">
 									<?php
+										// Same as the manufacturers. Used in search.
+										$categories->data_seek(0);
+										
 										while($cat = $categories->fetch_assoc()){
 											echo '<option value="' . $cat['category_id'] . '">' 
 												. $cat['category_name'] .'</option>';

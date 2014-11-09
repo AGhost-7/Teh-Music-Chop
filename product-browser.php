@@ -9,12 +9,23 @@
 		exit;
 	}
 	
+	// manually declare to prevent any hackery.
+	$self_url = "product-browser.php";
+	
 	$page = isset($_GET['p']) ? intval($_GET['p']) : 1;
 
 	$result = $con->query("SELECT Round((COUNT(*) / 20) + 0.5) As cnt FROM `products`");
 	$page_count = intval($result->fetch_assoc()['cnt']);
 
 	$rows = products_from_request($page,$page_count);
+	
+	$manufacturers = $con->query("
+		SELECT * FROM `manufacturers`
+	");
+	
+	$categories = $con->query("
+		SELECT * FROM `categories`
+	");
 	
 ?>
 <html>
@@ -24,7 +35,12 @@
 	</head>
 	<body>
 		<div class="container">
-		<?php include 'templates/navbar.php'; ?>
+		
+		<?php 
+			include 'templates/navbar.php'; 
+			include 'templates/search-util.php';
+		?>
+		
 		<table class="table">
 			<thead>
 				<tr>
@@ -57,18 +73,7 @@
 			<!--<?php echo $rows->num_rows; ?> -->
 		</table>
 		
-		<nav>
-			<ul class="pager">
-			<?php 
-			if($page > 1) {
-				echo '<li><a href="product-browser.php?p=' . ($page - 1). '">&laquo; Previous</a></li>';
-			}
-			if($page < $page_count) {
-				echo '<li><a href="product-browser.php?p=' . ($page + 1). '">Next &raquo;</a></li>';
-			}
-			?>
-			</ul>
-		</nav>
+		<?php include 'templates/pager.php'; ?>
 	
 	
 		<div id="pop-template" style="display:none">

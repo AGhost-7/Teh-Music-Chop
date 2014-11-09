@@ -4,8 +4,12 @@
 	 * before the html in the php file you want to
 	 * use this for.
 	 */
-
-	header('refresh: 2; url=/');
+	
+	if(!isset($msg_redirect)){
+		$msg_redirect = "/";
+	}
+	
+	header('refresh: 2; url=' . $msg_redirect);
 	
 	if(!isset($msg_type)){
 		$msg_type = 'success';
