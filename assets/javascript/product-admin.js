@@ -115,20 +115,18 @@ $('#save-btn').click(function(){
 		quantity = $quantityEditor.val(),
 		price = $priceEditor.val(),
 		manufacturer = $manufacturerEditor.val(),
-		category = $categoryEditor.val();
-		
+		category = $categoryEditor.val(),
+		img = $imageDisplay.attr('src');
+	
 	if(isNaN(quantity) || isNaN(price) 
 			|| quantity < 0 || price < 0.01
-			|| name === "")
+			|| name === "" || img === ""){
 		alert('Invalid input.');
-	else if(editorMode === 'mod'){
+	} else if(editorMode === 'mod'){
 		var 
 			$tr = $lastTr,
 			$ch = $tr.children();
 		
-		//if($imageEditor[0].files[0]) alert("custom file!");
-		
-		//var formData = new FormData();
 		$.ajax({
 			url: "ajax/mod-product.php",
 			type: 'POST',
@@ -138,7 +136,8 @@ $('#save-btn').click(function(){
 				"product-name": name,
 				"product-category": category,
 				"product-manufacturer": manufacturer,
-				"product-price": price
+				"product-price": price,
+				"product-img": img
 			},
 			success: function(data){
 				if(data.error) {
@@ -162,7 +161,8 @@ $('#save-btn').click(function(){
 				"product-name": name,
 				"product-category": category,
 				"product-manufacturer": manufacturer,
-				"product-price": price
+				"product-price": price,
+				"product-img": img
 			},
 			success:function(data){
 				if(data.error){
@@ -172,15 +172,9 @@ $('#save-btn').click(function(){
 						.find('tr:first-child')
 						.clone(true);//clone with events
 					
-					
-					
 					$tableBody.prepend($clone[0]);
 					
 					dataToRow($clone.children(), data.vars);
-					
-					//alert($clone);
-					
-					console.log('The element is: ', $clone[0]);
 					
 					$etr.modal('hide');
 				}
@@ -194,14 +188,20 @@ $('#save-btn').click(function(){
 
 // Sends data taken from the server's response 
 // and editor to the row's children
-function dataToRow($trChildren, vars){
-	$trChildren.eq(1).text(vars['product-name']);
-	$trChildren.eq(2).text($manufacturerEditor.find('option:selected').text());
-	$trChildren.eq(2).attr('data-manufacturer-id', vars['product-manufacturer']);
-	$trChildren.eq(3).text($categoryEditor.find('option:selected').text());
-	$trChildren.eq(3).attr('data-category-id', vars['product-category']);
-	$trChildren.eq(4).text(vars['product-price']);
-	$trChildren.eq(5).text(vars['product-quantity']);
+function dataToRow($ch, vars){
+	console.log(vars);
+	var $img = $ch.eq(0).find('img');
+	if($img.attr('src') !== vars['product-img']){
+		$img.attr('src', vars['product-img'])
+	}
+	
+	$ch.eq(1).text(vars['product-name']);
+	$ch.eq(2).text($manufacturerEditor.find('option:selected').text());
+	$ch.eq(2).attr('data-manufacturer-id', vars['product-manufacturer']);
+	$ch.eq(3).text($categoryEditor.find('option:selected').text());
+	$ch.eq(3).attr('data-category-id', vars['product-category']);
+	$ch.eq(4).text(vars['product-price']);
+	$ch.eq(5).text(vars['product-quantity']);
 }
 
 // make it so that the title changes as you write
@@ -218,9 +218,34 @@ $imageButton.click(function(){
 });
 
 $imageEditor.change(function(ev){
+	console.log('image changed.');
+	var form = new FormData(),
+		file = ev.target.files[0];
+	form.append("image", file);
 	
-	console.log('changed:', ev);
-
+	$.ajax({
+		url:"ajax/upload-image.php",
+		type:'POST',
+		data: form,
+		success: function(data){
+			if(data.error){
+				alert(data.error);
+				// since this is an on-change event, might 
+				// be a good idea to clear...
+				ev.target.value = "";
+			} else {
+				$imageDisplay.attr('src', data.result)
+			}
+		},
+		error: function(x,err,msg){
+			alert("Error connecting to server.")
+		},
+		// jQuery is going to scream, so turn off
+		// processing and type checking shenanigans.
+		contentType: false,
+		processData: false
+	});
+	
 });
 
 simpleEditor('manufacturer');

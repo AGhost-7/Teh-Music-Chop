@@ -1,12 +1,6 @@
 <?php
 
-$con = new mysqli('localhost', 'root', '', 'music_shop');
-
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
-}
-
+include 'sql-connect.php';
 
 
 /**

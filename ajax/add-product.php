@@ -1,54 +1,20 @@
 <?php
 	include '../includes/sql.php';
+	include '../includes/product.php';
+	
 	header('Content-Type: application/json');
 	
 	if(!$user || !$user->get_is_admin()) {
 		echo '{"error":"You do no have appropriate permissions"}';
-	} else if(!isset($_POST['product-quantity'])
-			|| !isset($_POST['product-name'])
-			|| !isset($_POST['product-price'])
-			|| !isset($_POST['product-manufacturer'])){
-		echo '{"error":"Missing arguments"}';
 	} else {
-		
-		$price = floatval($_POST['product-price']);
-		$name = htmlspecialchars($_POST['product-name']);
-		$quantity = intval($_POST['product-quantity']);
-		$manufacturer = intval($_POST['product-manufacturer']);
-		$category = intval($_POST['product-category']);
-		
-		$prep = $con->prepare("
-			INSERT INTO `products`(
-				product_name,
-				product_quantity,
-				product_price,
-				product_manufacturer,
-				product_category
-			)
-			VALUES
-			(?,?,?,?,?)
-		");
-		
-		$prep->bind_param('sidii', $name, $quantity, $price, $manufacturer, $category);
-		
-		if($prep->execute()) {
-			echo json_encode(
-				array(
-					'vars' => array(
-						'product-price' => $price,
-						'product-name' => $name,
-						'product-quantity' => $quantity,
-						'product-manufacturer' => $manufacturer,
-						'product-category' => $category
-					), 
-					'id' => $prep->insert_id
-				)
-			);
+		$product = product::from_post();
+		if($product->error){
+			echo '{"error":"' . $product->error . '"}';
+		} else if(!$result = $product->db_insert()){
+			echo '{"error":"' . $product->error . '"}';
 		} else {
-			echo '{"error":"' . $prep->error . '"}';
+			echo json_encode($result);
 		}
-		
-		$prep->close();
 	}
 	
 	$con->close();

@@ -22,7 +22,7 @@ CREATE TABLE `tokens`(
 	-- Use DATETIME and not TIMESTAMP as it can cause problems...
 	-- See TIMESTAMP's range for details:
 	-- http://dev.mysql.com/doc/refman/5.5/en/datetime.html
-	token_created_on DATETIME NOT NULL DEFAULT NOW()
+	token_created_on DATETIME NOT NULL DEFAULT NOW(),
 	PRIMARY KEY(token_val)
 );
 
@@ -43,7 +43,7 @@ CREATE TABLE `products`(
 	product_price FLOAT NOT NULL,
 	product_name TEXT NOT NULL,
 	product_quantity INT NOT NULL DEFAULT 0,
-	product_img VarChar(80),
+	product_img TEXT,
 	product_manufacturer INT NOT NULL
 		REFERENCES `manufacturers`(manufacturer_id),
 	product_category INT NOT NULL 

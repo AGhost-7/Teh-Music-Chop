@@ -18,7 +18,7 @@
 	$result = $con->query("SELECT Round((COUNT(*) / 20) + 0.5) As cnt FROM `products`");
 	$page_count = intval($result->fetch_assoc()['cnt']);
 
-	$rows = products_from_request($page,$page_count);
+	$rows = products_from_request($page, $page_count);
 	
 	$manufacturers = $con->query("
 		SELECT * FROM `manufacturers`
@@ -58,12 +58,12 @@
 				<?php while($row = $rows->fetch_assoc()): ?>
 					<tr data-product-id="<?php echo $row['product_id']?>" >
 						<td class="hidden-xs hidden-sm img-container">
-							<img class="img-rounded" src="<?php echo 'assets/images/products/' . $row['product_img']; ?>"/>
+							<img class="img-rounded" src="<?php echo $row['product_img']; ?>"/>
 						</td>
 						<td><?php echo $row['product_name']; ?></td>
 						<td><?php echo $row['manufacturer_name']; ?></td>
 						<td><?php echo $row['category_name']; ?></td>
-						<td><?php echo $row['product_price']; ?></td>
+						<td><?php echo number_format($row['product_price'], 2, '.', ''); ?></td>
 						<td><?php echo $row['product_quantity']; ?></td>
 						<td>
 							<button class="btn btn-default add-cart">Add to cart</button>

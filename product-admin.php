@@ -68,12 +68,12 @@
 					<?php while($row = $rows->fetch_assoc()): ?>
 						<tr data-product-id="<?php echo $row['product_id']?>">
 							<td class="hidden-xs hidden-sm img-container">
-								<img class="img-rounded" src="<?php echo 'assets/images/products/' . $row['product_img']; ?>"/>
+								<img class="img-rounded" src="<?php echo $row['product_img']; ?>"/>
 							</td>							
 							<td><?php echo $row['product_name']; ?></td>
 							<td data-manufacturer-id="<?php echo $row['product_manufacturer']; ?>"><?php echo $row['manufacturer_name']; ?></td>
 							<td data-category-id="<?php echo $row['product_category']; ?>"><?php echo $row['category_name']; ?></td>
-							<td><?php echo $row['product_price']; ?></td>
+							<td><?php echo number_format($row['product_price'], 2, '.', ''); ?></td>
 							<td><?php echo $row['product_quantity']; ?></td>
 							<td >
 								<div class="btn-group-vertical">
@@ -174,8 +174,6 @@
 								<label>Product Quantity</label>
 								<input type="text" name="product-quantity" class="form-control" id="quantity-editor"/>
 							</div>
-							
-							
 							
 						</div><!-- END MODAL BODY -->
 						
