@@ -10,4 +10,6 @@
 	$msg_title = "Logout";
 	
 	include 'templates/msg-with-redirect.php';
+	
+	$con->close();
 ?>

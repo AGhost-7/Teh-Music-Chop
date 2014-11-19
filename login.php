@@ -6,6 +6,7 @@
 		$msg_title = "Logged in";
 		$msg_body = "Already logged in, redirecting to home page.";
 		include 'templates/msg-with-redirect.php';
+		$con->close();
 		exit;
 		
 	} else if(isset($_POST['user-name']) && isset($_POST['password'])) {

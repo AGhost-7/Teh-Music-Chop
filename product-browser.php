@@ -6,6 +6,7 @@
 		$msg_title = "Illegal Access";
 		$msg_type = "danger";
 		include 'templates/msg-with-redirect.php';
+		$con->close();
 		exit;
 	}
 	
