@@ -37,6 +37,10 @@ class user {
 		return $this->is_admin;
 	}
 	
+	/**
+	 * Sets session variables and returns an instance of user
+	 * if the password and user_name where correct.
+	 */
 	public static function login($user_name, $password, $is_cookie) {
 		global $con;
 		$prep = $con->prepare("
@@ -53,15 +57,24 @@ class user {
 		if($prep->fetch()) {
 			$_SESSION['user-name'] = $user_name;
 			$prep->close();
-			return new User($user_name, $user_id, $is_admin);
+			
+			$user = new user($user_name, $user_id, $is_admin);
+			
+			if($is_cookie){
+				$user->init_cookie();
+			}
+			
+			return $user;
 		} else {
 			error_log("nope...");
 			$prep->close();
 			return false;
 		}
-		
 	}
 	
+	/**
+	 * Creates a new user from the session variables.
+	 */
 	public static function from_session() {
 		if(isset($_SESSION['user-name'])) {
 			global $con;
@@ -85,6 +98,9 @@ class user {
 		}
 	}
 	
+	/**
+	 * Inserts a new user in the mysql table
+	 */
 	public static function insert_new($user_name, $password) {
 		global $con;
 		$prep = $con->prepare("INSERT INTO `users`(user_name,user_password) VALUES (?, ?)");
@@ -101,7 +117,52 @@ class user {
 		}
 	}
 	
+	/**
+	 * Returns true if there was a cookie and that
+	 * the session variable was restored.
+	 */
+	public static function restore_from_cookie(){
+		global $con;
+		
+		if(isset($_COOKIE['id'])){
+			$prep = $con->prepare("
+				SELECT user_name FROM `users`
+				INNER JOIN `tokens`
+					ON token_user = user_id
+				WHERE token_val = ?
+					AND token_created_on < DATE_ADD(NOW(), INTERVAL 30 DAY)
+			");
+			
+			$prep->bind_param("s", $_COOKIE['id']);
+			
+			if($prep->execute()) {
+				$prep->bind_result($user_name);
+				
+				if($prep->fetch()) {
+					
+					$_SESSION['user-name'] = $user_name;
+					$prep->close();
+					
+					return true;
+				} else {
+					$prep->close();
+					return false;
+				}
+			} else {
+				$prep->close();
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	/**
+	 * Returns all of the purchases that the user hasn't
+	 * payed yet.
+	 */
 	public function purchases() {
+		
 		global $con;
 		return $con->query("
 			SELECT * FROM purchases
@@ -111,6 +172,66 @@ class user {
 				AND purchase_is_payed = FALSE;
 		");
 	}
+	
+	/**
+	 * Initializes the cookie so that the session
+	 * can be persisted even after closing the browser.
+	 */
+	public function init_cookie(){
+		global $con;
+		
+		// generate token value...
+		$token = hash('sha512', (rand() . microtime()));
+		
+		// insert into table
+		if($con->query("
+				INSERT INTO `tokens`(token_user,token_val)
+				VALUES ($this->user_id, '$token')
+				")) {
+				
+			// now set it
+			$_COOKIE['id'] = $token;
+			setcookie('id', $token, time() + (60 * 60 * 24 * 30));
+			
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	/**
+	 * Takes care of removing all login related session variables/cookies
+	 * and deletes the token from the database for logging out.
+	 */
+	public function logout(){
+		global $con;
+		
+		// If the session was persisted through cookies,
+		// get rid of that first.
+		if(isset($_COOKIE['id'])){
+			$prep = $con->prepare("
+				DELETE FROM `tokens` 
+				WHERE token_user = $this->user_id
+					AND token_val = ?
+			");
+			
+			$prep->bind_param("s", $_COOKIE['id']);
+			$prep->execute();
+			// and clear the cookies...
+			unset($_COOKIE['id']);
+			/*bool setcookie ( string $name [, string $value [, 
+				int $expire = 0 [, string $path [, string $domain [, 
+				bool $secure = false [, bool $httponly = false ]]]]]] )*/
+			setcookie('id', '', time() - 3600);
+		}
+		
+		// and now destroy the session variables...
+		session_unset();
+		session_destroy();
+	
+		
+	}
+	
 }
 
 /**
@@ -177,9 +298,26 @@ function products_from_request($page, $page_count){
 		$has_w = true;
 	}
 	
-	// dynamic component, ordering shit
+	// ordering
 	
-	//TODO...
+	if(isset($_GET['o'])){
+		$order = intval($_GET['o']);
+	} else {
+		$order = 1;
+	}
+	
+	switch($order){
+		case 1:
+			$query .= " ORDER BY product_name ASC ";
+			break;
+		case 2:
+			$query .= " ORDER BY product_price DESC ";
+			break;
+		case 3:
+			$query .= " ORDER BY product_price ASC ";
+			break;
+	}
+	
 	
 	// now we want to limit number of rows we're getting.
 	$from = ($page - 1) * 20;
@@ -195,9 +333,8 @@ function products_from_request($page, $page_count){
 		$prep = $con->prepare($query);
 		
 		// since the bind_param is a vararg function, we need to use some
-		// funky shit since our query has a varied number of arguments.
-		// i.e., we need to be able to call the function by passing an
-		// array or arguments.
+		// funky shit... i.e., we need to be able to call the function by 
+		// passing an array of our arguments.
 		call_user_func_array(array($prep,'bind_param'), $args);
 		
 		$prep->execute();
@@ -214,5 +351,13 @@ function products_from_request($page, $page_count){
 session_start();
 
 $user = user::from_session();
+
+if(!$user) {
+	// try to restore from cookie
+	if(user::restore_from_cookie()){
+		// lets try again...
+		$user = user::from_session();
+	}
+}
 
 ?>

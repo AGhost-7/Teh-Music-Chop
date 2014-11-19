@@ -1,9 +1,13 @@
 <?php
-	session_start();
-	session_unset();
-	session_destroy();
+	include 'includes/sql.php';
+	
+	$user->logout();
+	
+	// so that the navbar doesn't show the name...
+	$user = false;
 	
 	$msg_body = "Successfully logged out! Redirecting to home page.";
 	$msg_title = "Logout";
+	
 	include 'templates/msg-with-redirect.php';
 ?>

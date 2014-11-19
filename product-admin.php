@@ -75,10 +75,10 @@
 							<td data-category-id="<?php echo $row['product_category']; ?>"><?php echo $row['category_name']; ?></td>
 							<td><?php echo $row['product_price']; ?></td>
 							<td><?php echo $row['product_quantity']; ?></td>
-							<td class="">
+							<td >
 								<div class="btn-group-vertical">
-								<button class="btn btn-sm btn-warning mod-product">Modify</button>
-								<button class="btn btn-sm btn-danger del-product">Delete</button>
+									<button class="btn btn-sm btn-warning mod-product">Modify</button>
+									<button class="btn btn-sm btn-danger del-product">Delete</button>
 								</div>
 							</td>
 						</tr>

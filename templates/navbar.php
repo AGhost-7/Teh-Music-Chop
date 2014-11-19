@@ -10,6 +10,9 @@
 	</div>
 	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 		<ul class="nav navbar-nav navbar-right">
+			<li>
+				<a href="about.php">About</a>
+			</li>
 			<?php 
 				if($user)
 					echo '<li><a href="product-browser.php">Browse</a></li>';

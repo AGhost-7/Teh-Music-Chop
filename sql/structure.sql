@@ -17,12 +17,12 @@ CREATE TABLE `users`(
 -- expire which means that IF session hijacking occurs
 -- the time window is minimized.
 CREATE TABLE `tokens`(
-	token_val CHAR(128) NOT NULL,
+	token_val CHAR(128) NOT NULL UNIQUE,
 	token_user INT NOT NULL REFERENCES users(user_id),
 	-- Use DATETIME and not TIMESTAMP as it can cause problems...
 	-- See TIMESTAMP's range for details:
 	-- http://dev.mysql.com/doc/refman/5.5/en/datetime.html
-	token_created_on DATETIME NOT NULL DEFAULT NOW(),
+	token_created_on DATETIME NOT NULL DEFAULT NOW()
 	PRIMARY KEY(token_val)
 );
 

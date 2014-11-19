@@ -260,10 +260,14 @@ function simpleEditor(name) {
 						if(data.error) {
 							alert(data.error)
 						} else {
-							var $opt = $('<option value="' + data.id + '">' + 
-								data.vars[name + '-name'] + '</option>');
+							var opt = '<option value="' + data.id + '">' + 
+								data.vars[name + '-name'] + '</option>';
 							
-							$sel.prepend($opt);
+							$sel.prepend(opt);
+							
+							// also got to add it to the search bar.
+							$('#search-' + name + ' > option:first-child').after(opt);
+							
 							$t.popover('hide');
 						}
 					},
@@ -291,7 +295,7 @@ function simpleEditor(name) {
 			$btn = $pop.find('button');
 		
 		$btn.click(withState(function($selected,id,inName){
-			//alert('modify: '+name)
+
 			var inName = $pop.find('input').val();
 			
 			if(inName === ""){
@@ -327,6 +331,11 @@ function simpleEditor(name) {
 							.find('td[data-' + name + '-id="' + id + '"]')
 							.text(inName);
 						
+						// Gotta update the search bar
+						$('#search-' + name)
+							.find('[value="' + id + '"]')
+							.text(inName);
+						
 						// since it won't hide on its own...
 						$t.popover('hide');
 					},
@@ -338,9 +347,9 @@ function simpleEditor(name) {
 		}));
 	});
 	
-	
 	// Remove
-	$root.find('.btn-danger').click(withState(function($selected, id){
+	
+	function deleteButton($selected, id) {
 		args = {};
 		args[name + '-id'] = id;
 		
@@ -348,14 +357,13 @@ function simpleEditor(name) {
 			url: "ajax/del-" + name + '.php',
 			data: args,
 			type: "POST",
-		//	dataType: 'text',
 			success: function(data){
-				console.log(data)
-			
 				if(data.error){
 					alert(data.error);
 				} else {
 					$selected.remove();
+					// remove from search bar as well..
+					$('#search-' + name + ' > option[value="' + data.vars[name + '-id']+ '"]').remove();
 					// and reset select input to first element after removing
 					$sel[0].selectedIndex = 0;
 				}
@@ -364,7 +372,43 @@ function simpleEditor(name) {
 				alert(err)
 			}
 		})
-	}));
+	
+	}
+	
+	
+	withConfirmation.call(
+		$root.find('.btn-danger')[0],
+		'Confirm deletion', withState(deleteButton)
+	);
+	
+	function withConfirmation(msg, handler){
+		var $t = $(this), 
+			t = this, 
+			$sub = $t.parent().parent();
+		
+		$t.popover({
+			html: true,
+			placement: 'left',
+			container: $sub,
+			content: function(){
+				return '<strong>' + msg + '</strong> &nbsp; '
+					+ '<button class="btn btn-sm btn-default" id="btn-confirm">Ok</button>'
+			}
+		}).on('shown.bs.popover', function(){
+			
+			$sub.find('#btn-confirm').click(function(){
+				handler.apply(t, arguments);
+				$t.popover('hide');
+			});
+			
+		}).on('focusout', function(){
+			alert("focus lost");
+			$(this).popover('hide')
+		}).blur(function(){
+			alert("focus lost")
+		});
+		
+	}
 	
 	// Functional inheritance :D... Used for functions
 	// that need info on the state of the select block.
@@ -373,9 +417,7 @@ function simpleEditor(name) {
 			var $selected = $sel.find('option:selected'),
 				id = $selected.val(),
 				name = $selected.text();
-				
-		//	console.log('name',name,'id',id);
-			
+	
 			return handler($selected,id,name);
 		};
 	}
