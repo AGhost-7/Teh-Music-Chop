@@ -13,6 +13,9 @@
 			<li>
 				<a href="about.php">About</a>
 			</li>
+			<li>
+				<a href="contact.php">Contact Us</a>
+			</li>
 			<?php 
 				if($user)
 					echo '<li><a href="product-browser.php">Browse</a></li>';

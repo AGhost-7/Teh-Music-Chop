@@ -7,6 +7,9 @@ USE `music_shop`;
 CREATE TABLE `users`(
 	user_id INT NOT NULL AUTO_INCREMENT,
 	user_name VarChar(50) NOT NULL UNIQUE,
+	user_first_name VarChar(50),
+	user_last_name VarChar(50),
+	user_email VarChar(80),
 	user_password CHAR(128) NOT NULL,
 	user_is_admin BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY(user_id)

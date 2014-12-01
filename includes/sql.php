@@ -95,10 +95,26 @@ class user {
 	/**
 	 * Inserts a new user in the mysql table
 	 */
-	public static function insert_new($user_name, $password) {
+	public static function insert_new($user_name, $password, $first_name, $last_name, $email) {
 		global $con;
-		$prep = $con->prepare("INSERT INTO `users`(user_name,user_password) VALUES (?, ?)");
-		$prep->bind_param("ss", $user_name, $password);
+		$prep = $con->prepare("
+			INSERT INTO `users`(
+				user_name,
+				user_password,
+				user_first_name, 
+				user_last_name,
+				user_email
+			) 
+			VALUES (?, ?, ?, ?, ?)
+		");
+		
+		$prep->bind_param("sssss", 
+			$user_name, 
+			$password,
+			$first_name, 
+			$last_name, 
+			$email);
+		
 		$prep->execute();
 		
 		// Already exists
@@ -106,8 +122,10 @@ class user {
 			$prep->close();
 			return false;
 		} else {
+			
+			$user = new user($user_name, $prep->insert_id, false);
 			$prep->close();
-			return true;
+			return $user;
 		}
 	}
 	
