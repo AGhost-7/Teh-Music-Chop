@@ -1,18 +1,61 @@
 <?php 
 	include 'includes/sql.php';
+	$fields = array('first-name', 'last-name', 'message',
+		'address', 'city', 'province', 'email', 'postal-code', 'phone');
 	
-	if(isset($_POST['name']) ||
-		isset($_POST['message'])){
+	$all_set = array_reduce($fields, function($accu, $field){
+		return $accu && isset($_POST[$field]);
+	}, true);
+	
+	if($all_set){
+		// Escape html characters to make sure
+		// the email sent won't have any malicious
+		// code when you open it.
+		$input = array_reduce($fields, function($result, $field){
+			$result[$field] = htmlspecialchars($_POST[$field]);
+			return $result;
+		}, array());
 		
-		//echo $_POST['message'];
+		$message = "
+			<p>
+				{$input['message']}
+			</p>
+			
+			
+			<address>
+				<strong>{$input['last-name']}, {$input['first-name']}</strong><br/>
+				{$input['address']}<br/>
+				{$input['city']}, {$input['province']} {$input['postal-code']}<br/>
+				Phone number: {$input['phone']}<br/>
+			</address>
+			";
 		
-	
-	
-		$msg_title = 'Redirect';
-		$msg_body = 'Thank you for contacting us!';
-		include 'templates/msg-with-redirect.php';
-		$con->close();
-		exit;
+		$headers = "
+			Content-type: text/html; charset=utf-8\r\n
+			From: {$input['first-name']} {$input['last-name']} <{$input['email']}>\r\n
+			Reply-To: {$input['email']}";
+			
+		
+		/*bool mail ( 
+			string $to , 
+			string $subject , 
+			string $message [, 
+			string $additional_headers [, 
+			string $additional_parameters ]] )*/
+		if(mail(
+				'hellomynameisjony@gmail.com', 
+				"An email from {$input['first-name']} {$input['last-name']}",
+				$message,
+				$headers)){
+			
+			$msg_title = 'Email Sent';
+			$msg_body = 'Thank you for contacting us!';
+			include 'templates/msg-with-redirect.php';
+			$con->close();
+			exit;
+		} else {
+			$error = 'There was an error processing your message.';
+		}
 	}
 	
 ?>

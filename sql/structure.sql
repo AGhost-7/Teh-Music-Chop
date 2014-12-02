@@ -1,8 +1,8 @@
-DROP DATABASE IF EXISTS `music_shop`;
+DROP DATABASE IF EXISTS `maboutique_2619398`;
 
-CREATE DATABASE `music_shop`;
+CREATE DATABASE `maboutique_2619398`;
 
-USE `music_shop`;
+USE `maboutique_2619398`;
 
 CREATE TABLE `users`(
 	user_id INT NOT NULL AUTO_INCREMENT,
